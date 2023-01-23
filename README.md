@@ -1,1 +1,1 @@
-# express-auth-session
+# express-session-cookies
