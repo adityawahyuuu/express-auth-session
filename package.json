@@ -18,11 +18,8 @@
   },
   "homepage": "https://github.com/adityawahyuuu/learn-express-session-cookies#readme",
   "dependencies": {
-    "cookie-parser": "^1.4.6",
-    "escape-html": "^1.0.3",
     "express": "^4.18.2",
-    "express-session": "^1.17.3",
-    "parseurl": "^1.3.3"
+    "express-session": "^1.17.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
