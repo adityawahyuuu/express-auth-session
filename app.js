@@ -1,18 +1,22 @@
 const express = require('express');
 const session = require('express-session');
+const Redis = require('ioredis');
+const RedisStore = require('connect-redis')(session);
 const https = require('https');
 const fs = require('fs');
 
 const app = express();
 const host = 'localhost';
-const port = 8443;
+const port = 8000;
 const expiresTime = 1000 * 60 * 60 * 24;
-// const expiresTime = 1000 * 10;
+const redis = new Redis();
 
+// Gunakan session sebagai middleware
 app.use(session({
+    store: new RedisStore({ client: redis }),
     secret: 'secretKey',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
         secure: true,
         maxAge: expiresTime
@@ -25,11 +29,11 @@ const isAuthenticated = (req, res, next) => {
     else next('route');
 };
 
+// Routes
 app.get('/', isAuthenticated, (req, res) => {
     res.send('hello, ' + req.session.user + '!' +
-    ' <a href="/logout">Logout</a> ' + req.sessionID + ' <a href="/about">about</a>');
+    ' <a href="/logout">Logout</a>');
 });
-
 
 app.get('/', (req, res) => {
     res.send('<form action="/login" method="post">' +
@@ -38,19 +42,11 @@ app.get('/', (req, res) => {
     '<input type="submit" text="Login"></form>')
 });
 
-app.get('/about', isAuthenticated, (req, res) => {
-    res.send('This is about of, ' + req.session.user + '!' +
-    ' <a href="/">Main Page</a> ' + req.sessionID);
-});
-
 app.post('/login', express.urlencoded({ extended: false }), (req, res) => {
-    req.session.regenerate(err => {
-        if (err) next(err);
-        else{
-            req.session.user = req.body.user;
-            res.redirect('/');
-        }
-    });
+    const sess = req.session;
+    const {user} = req.body;
+    sess.user = user;
+    res.redirect('/');
 });
 
 app.get('/logout', (req, res) => {
@@ -60,6 +56,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
+// Listen Request
 https.createServer({
     key: fs.readFileSync('key.pem'),
     cert: fs.readFileSync('cert.pem'),
